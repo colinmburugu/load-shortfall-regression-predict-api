@@ -58,7 +58,40 @@ def _preprocess_data(data):
     # ---------------------------------------------------------------
 
     # ----------- Replace this code with your own preprocessing steps --------
-    predict_vector = feature_vector_df[['Madrid_wind_speed','Bilbao_rain_1h','Valencia_wind_speed']]
+    feature_vector_df.drop(columns = ['Unnamed: 0','Valencia_wind_deg','Seville_pressure'],inplace = True)
+
+    feature_vector_df['time'] =  pd.to_datetime(feature_vector_df['time'])
+
+    feature_vector_df['Year']= pd.DatetimeIndex(feature_vector_df['time']).year
+    feature_vector_df['Month']= pd.DatetimeIndex(feature_vector_df['time']).month
+    feature_vector_df['Day']= pd.DatetimeIndex(feature_vector_df['time']).day
+    feature_vector_df['Hour']= pd.DatetimeIndex(feature_vector_df['time']).hour
+
+    feature_vector_df['month_sin'] = np.sin((feature_vector_df['Month']-1)*(2.*np.pi/feature_vector_df['Month'].max()))
+    feature_vector_df['month_cos'] = np.cos((feature_vector_df['Month']-1)*(2.*np.pi/feature_vector_df['Month'].max()))
+    feature_vector_df['day_sin'] = np.sin((feature_vector_df['Day']-1)*(2.*np.pi/feature_vector_df['Day'].max()))
+    feature_vector_df['day_cos'] = np.cos((feature_vector_df['Day']-1)*(2.*np.pi/feature_vector_df['Day'].max()))
+    feature_vector_df['hour_sin'] = np.sin((feature_vector_df['Hour']-1)*(2.*np.pi/feature_vector_df['Hour'].max()))
+    feature_vector_df['hour_cos'] = np.cos((feature_vector_df['Hour']-1)*(2.*np.pi/feature_vector_df['Hour'].max()))
+
+    cols_to_drop = ['time','Month','Day','Hour']
+
+    feature_vector_df.drop(columns = cols_to_drop,inplace = True)
+
+    feature_vector_df.fillna(0,inplace = True)
+    
+
+
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(feature_vector_df)
+    
+    X_standardise = pd.DataFrame(X_scaled,columns=feature_vector_df.columns)
+
+    predict_vector =  X_standardise
+
+    
+
     # ------------------------------------------------------------------------
 
     return predict_vector
@@ -108,3 +141,5 @@ def make_prediction(data, model):
     prediction = model.predict(prep_data)
     # Format as list for output standardisation.
     return prediction[0].tolist()
+
+
